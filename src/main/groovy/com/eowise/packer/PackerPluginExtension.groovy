@@ -10,7 +10,7 @@ class PackerPluginExtension {
     String packsPath
 
     PackerPluginExtension() {
-        resolutions = []
+        variants = []
         packNames = []
     }
 
@@ -20,7 +20,7 @@ class PackerPluginExtension {
     }
 
     def add(String name, float ratio) {
-        resolutions.add(new Variant(name, ratio))
+        variants.add(new Variant(name, ratio))
     }
 
     def base(String name) {
