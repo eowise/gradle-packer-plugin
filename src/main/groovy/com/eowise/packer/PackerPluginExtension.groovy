@@ -4,9 +4,9 @@ package com.eowise.packer
  * Created by aurel on 15/12/13.
  */
 class PackerPluginExtension {
-    Set<Resolution> resolutions
+    Set<Variant> variants
     Set<String> packNames
-    Resolution baseResolution
+    Variant baseVariant
     String packsPath
 
     PackerPluginExtension() {
@@ -14,20 +14,19 @@ class PackerPluginExtension {
         packNames = []
     }
 
-    def resolutions(Closure closure) {
+    def variants(Closure closure) {
         closure.delegate = this
         closure()
     }
 
-    def add(int w, h) {
-        Resolution r = new Resolution(w, h)
-        resolutions.add(r)
+    def add(String name, float ratio) {
+        resolutions.add(new Variant(name, ratio))
     }
 
-    def base(int w, h) {
-        Resolution r = new Resolution(w, h)
-        resolutions.add(r)
-        baseResolution = r
+    def base(String name) {
+        Variant r = new Variant(name, 1f)
+        variants.add(r)
+        baseVariant = r
     }
 
     def packs(Closure closure) {

@@ -27,13 +27,13 @@ class PackerPlugin implements Plugin<Project> {
                             into "resources/${packName}"
                         }
 
-                        project.packer.resolutions.each() {
-                            res ->
-                                tasks.create(name: "resizeImages${res}${packName}", type: Magick, dependsOn: "convertSvg${packName}") {
+                        project.packer.variants.each() {
+                            variant ->
+                                tasks.create(name: "resizeImages${variant}${packName}", type: Magick, dependsOn: "convertSvg${packName}") {
                                     input "resources/${packName}", "**/*.png"
-                                    output "out/resources/${res}/${packName}"
+                                    output "out/resources/${variant}/${packName}"
                                     convert {
-                                        resize res.w / project.packer.baseResolution.w
+                                        resize variant.ratio
                                         condition '.9.png', {
                                             border {
                                                 width 1
@@ -51,21 +51,21 @@ class PackerPlugin implements Plugin<Project> {
                                     }
                                 }
 
-                                tasks.create(name: "copyPacks${res}${packName}", type: Copy) {
+                                tasks.create(name: "copyPacks${variant}${packName}", type: Copy) {
                                     from packName, "resources/${packName}"
-                                    into "out/resources/${res}/${packName}"
-                                    include "${res}.json"
+                                    into "out/resources/${variant}/${packName}"
+                                    include "${variant}.json"
                                     rename { f -> 'pack.json' }
                                 }
 
-                                tasks.create(name: "createPacks${res}${packName}", type: Packer, dependsOn: ["resizeImages${res}${packName}", "copyPacks${res}${packName}"]) {
-                                    pack packName, "out/resources/${res}"
-                                    into "${project.packer.packsPath}/${res}"
+                                tasks.create(name: "createPacks${variant}${packName}", type: Packer, dependsOn: ["resizeImages${variant}${packName}", "copyPacks${variant}${packName}"]) {
+                                    pack packName, "out/resources/${variant}"
+                                    into "${project.packer.packsPath}/${variant}"
                                 }
 
-                                project.buildPacks.dependsOn "createPacks${res}${packName}"
-                                project.cleanPacks.dependsOn "cleanCreatePacks${res}${packName}"
-                                project.cleanPacks.dependsOn "cleanResizeImages${res}${packName}"
+                                project.buildPacks.dependsOn "createPacks${variant}${packName}"
+                                project.cleanPacks.dependsOn "cleanCreatePacks${variant}${packName}"
+                                project.cleanPacks.dependsOn "cleanResizeImages${variant}${packName}"
 
                         }
                 }
