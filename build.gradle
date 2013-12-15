@@ -5,3 +5,8 @@ dependencies {
     compile localGroovy()
     compile project(':gradle-imagemagick')
 }
+
+apply plugin: 'maven'
+
+group = 'com.eowise'
+version = '0.5.0'
