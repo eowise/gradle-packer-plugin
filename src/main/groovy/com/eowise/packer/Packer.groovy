@@ -16,7 +16,7 @@ class Packer extends DefaultTask {
     @OutputFiles
     FileTree outputFiles
 
-    def pack(String packName, String resourcesPath) {
+    def from(String packName, String resourcesPath) {
         this.packName = packName
         this.resourcesFiles = project.fileTree(dir: "${resourcesPath}/${packName}", include: '**/*')
     }
