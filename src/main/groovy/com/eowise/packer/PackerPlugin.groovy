@@ -2,8 +2,10 @@ package com.eowise.packer
 import com.eowise.imagemagick.tasks.Magick
 import com.eowise.imagemagick.tasks.SvgToPng
 import com.eowise.packer.extension.PackerPluginExtension
+import com.eowise.packer.hooks.TaskHook
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.Copy
 
 class PackerPlugin implements Plugin<Project> {
@@ -15,7 +17,6 @@ class PackerPlugin implements Plugin<Project> {
         project.dependencies.add('tools', 'com.badlogicgames.gdx:gdx-tools:0.9.9')
         project.task("buildPacks")
         project.task("cleanPacks")
-
         
         project.configure(project) {
             afterEvaluate {
@@ -29,7 +30,7 @@ class PackerPlugin implements Plugin<Project> {
 
                         project.packer.resolutions.each() {
                             resolution ->
-                                tasks.create(name: "resizeImages${resolution}${pack}", type: Magick, dependsOn: "convertSvg${pack}") {
+                                Task resizeImagesTask = tasks.create(name: "resizeImages${resolution}${pack}", type: Magick, dependsOn: "convertSvg${pack}") {
                                     input pack.textures
                                     output "out/resources/${resolution}/${pack}"
                                     convert {
@@ -49,6 +50,19 @@ class PackerPlugin implements Plugin<Project> {
                                             composite()
                                         }
                                     }
+                                }
+
+                                project.packer.beforeResize.each {
+                                    TaskHook hook ->
+                                        // if applyToPacks is not set, we apply the hook to all packs
+                                        if (hook.applyToPacks.contains(pack.toString()) || hook.applyToPacks.size() == 0) {
+                                            Task t
+                                            String name = "${hook.name}Before${resizeImagesTask.name}"
+                                            if (hook.type == null) t = project.tasks.create(name)
+                                            else t = project.tasks.create(name, hook.type)
+                                            resizeImagesTask.dependsOn name
+                                            project.configure(t, hook.configure)
+                                        }
                                 }
 
                                 tasks.create(name: "copyPacks${resolution}${pack}", type: Copy) {

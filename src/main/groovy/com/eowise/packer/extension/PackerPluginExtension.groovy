@@ -1,4 +1,5 @@
 package com.eowise.packer.extension
+import com.eowise.packer.hooks.TaskHook
 import org.gradle.api.Project
 /**
  * Created by aurel on 15/12/13.
@@ -8,12 +9,14 @@ class PackerPluginExtension {
     final Project project
     Resolutions resolutions
     Packs packs
+    List<TaskHook> beforeResize
 
 
     PackerPluginExtension(final Project project) {
         this.project = project
         this.resolutions = new Resolutions()
         this.packs = new Packs(project)
+        this.beforeResize = []
 
     }
 
@@ -33,4 +36,9 @@ class PackerPluginExtension {
         resolutions.add('hdpi', 0.75f)
         resolutions.base('xhdpi')
     }
+
+    def beforeResize(Closure closure) {
+        beforeResize.add(project.configure(new TaskHook(), closure) as TaskHook)
+    }
+    
 }
