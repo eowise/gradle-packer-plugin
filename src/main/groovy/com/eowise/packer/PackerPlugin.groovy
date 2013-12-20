@@ -2,7 +2,7 @@ package com.eowise.packer
 import com.eowise.imagemagick.tasks.Magick
 import com.eowise.imagemagick.tasks.SvgToPng
 import com.eowise.packer.extension.PackerPluginExtension
-import com.eowise.packer.hooks.TaskHook
+import com.eowise.packer.hooks.Hook
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -23,22 +23,49 @@ class PackerPlugin implements Plugin<Project> {
                 project.packer.packs.each() {
                     pack ->
 
-                        tasks.create(name: "convertSvg${pack}", type: SvgToPng) {
+                        Task convertSvgTask = tasks.create(name: "convertSvg${pack}", type: SvgToPng) {
                             files pack.svgs
                             into "${project.packer.packs.resourcesPath}/${pack}"
                         }
 
+                        
                         project.packer.resolutions.each() {
                             resolution ->
-                                Task resizeImagesTask = tasks.create(name: "resizeImages${resolution}${pack}", type: Magick, dependsOn: "convertSvg${pack}") {
+                                
+                                Task resizeImagesTask = tasks.create(name: "resizeImages${resolution}${pack}", type: Magick, dependsOn: "convertSvg${pack}")
+
+                                project.packer.beforeResize.each {
+                                    Hook hook ->
+                                        // if applyToPacks is not set, we apply the hook to all packs
+                                        if (hook.applyToPacks.contains(pack.toString()) || hook.applyToPacks.size() == 0) {
+                                            hook.configure.ext.set('pack', pack)
+                                            project.configure(resizeImagesTask, hook.configure)
+                                        }
+                                }
+
+                                project.configure(resizeImagesTask) {
                                     input pack.textures
                                     output "out/resources/${resolution}/${pack}"
                                     convert {
                                         resize resolution.ratio
+                                    }
+                                }
+
+                                project.packer.afterResize.each {
+                                    Hook hook ->
+                                        // if applyToPacks is not set, we apply the hook to all packs
+                                        if (hook.applyToPacks.contains(pack.toString()) || hook.applyToPacks.size() == 0) {
+                                            hook.configure.ext.set('pack', pack)
+                                            project.configure(resizeImagesTask, hook.configure)
+                                        }
+                                }
+
+                                project.configure(resizeImagesTask) {
+                                    convert {
                                         condition pack.ninePatches, {
                                             border {
-                                                width 1
                                                 color 'none'
+                                                width 1
                                             }
                                             xc 'black'
                                             gravity 'North'
@@ -52,19 +79,6 @@ class PackerPlugin implements Plugin<Project> {
                                     }
                                 }
 
-                                project.packer.beforeResize.each {
-                                    TaskHook hook ->
-                                        // if applyToPacks is not set, we apply the hook to all packs
-                                        if (hook.applyToPacks.contains(pack.toString()) || hook.applyToPacks.size() == 0) {
-                                            Task t
-                                            String name = "${hook.name}Before${resizeImagesTask.name}"
-                                            if (hook.type == null) t = project.tasks.create(name)
-                                            else t = project.tasks.create(name, hook.type)
-                                            resizeImagesTask.dependsOn name
-                                            project.configure(t, hook.configure)
-                                        }
-                                }
-
                                 tasks.create(name: "copyPacks${resolution}${pack}", type: Copy) {
                                     from pack.toString(), "${project.packer.packs.resourcesPath}/${pack}"
                                     into "out/resources/${resolution}/${pack}"
@@ -72,7 +86,7 @@ class PackerPlugin implements Plugin<Project> {
                                     rename { f -> 'pack.json' }
                                 }
 
-                                tasks.create(name: "createPacks${resolution}${pack}", type: Packer, dependsOn: ["resizeImages${resolution}${pack}", "copyPacks${resolution}${pack}"]) {
+                                Task createPacksTask = tasks.create(name: "createPacks${resolution}${pack}", type: Packer, dependsOn: ["resizeImages${resolution}${pack}", "copyPacks${resolution}${pack}"]) {
                                     from pack.toString(), "out/resources/${resolution}"
                                     into "${project.packer.packs.packsPath}/${resolution}"
                                 }
@@ -80,7 +94,6 @@ class PackerPlugin implements Plugin<Project> {
                                 project.buildPacks.dependsOn "createPacks${resolution}${pack}"
                                 project.cleanPacks.dependsOn "cleanCreatePacks${resolution}${pack}"
                                 project.cleanPacks.dependsOn "cleanResizeImages${resolution}${pack}"
-
                         }
                 }
             }
