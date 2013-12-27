@@ -88,7 +88,7 @@ class PackerPlugin implements Plugin<Project> {
 
                                 Task createPacksTask = tasks.create(name: "createPacks${resolution}${pack}", type: Packer, dependsOn: ["resizeImages${resolution}${pack}", "copyPacks${resolution}${pack}"]) {
                                     from pack.toString(), "out/resources/${resolution}"
-                                    into "${project.packer.packs.packsPath}/${resolution}"
+                                    into project.packer.packs.packsPath(resolution)
                                 }
 
                                 project.buildPacks.dependsOn "createPacks${resolution}${pack}"

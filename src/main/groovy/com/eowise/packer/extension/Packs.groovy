@@ -11,7 +11,7 @@ class Packs {
     final Project project
     final NamedDomainObjectContainer set
     String resourcesPath
-    String packsPath
+    Closure packsPathClosure
 
     Packs(final Project project) {
         super()
@@ -43,12 +43,16 @@ class Packs {
         set.each(closure)
     }
 
-    def resourcesPath(String resourcesPath) {
+    def from(String resourcesPath) {
         this.resourcesPath = resourcesPath
     }
     
-    def packsPath(String packsPath) {
-        this.packsPath = packsPath
+    def to(Closure closure) {
+        this.packsPathClosure = closure
     }
 
+    def packsPath(Resolution res) {
+        return packsPathClosure(res)
+    }
+    
 }

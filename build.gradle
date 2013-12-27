@@ -9,4 +9,4 @@ dependencies {
 apply plugin: 'maven'
 
 group = 'com.eowise'
-version = '0.5.0'
+version = '0.5.0-SNAPSHOT'
