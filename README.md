@@ -1,21 +1,15 @@
-gradle-packer-plugin
-====================
+# gradle-packer-plugin
 
-A Gradle plugin witch automatically packs texture for a libgdx game
+A Gradle plugin witch automatically packs texture for a libgdx game, using libgdx [texture packer](https://github.com/libgdx/libgdx/wiki/Texture-packer#wiki-NinePatches). Before packing, the plugin can do some actions on the resources provided, such as :
 
+* Resize images for variants
+* generate 1 pixel 9-patches automatically
+* Convert SVG to PNG images
 
-Features
---------
-* Resize image for variants
-* generate 9-patches automatically
-* Convert SVG to PNG
-* Incremental
+## Install
 
-Install
--------
+## Usage
 
-Usage
------
 ```groovy
 packer {
   resolutions {
@@ -36,3 +30,7 @@ packer {
   }
 }
 ```
+
+### Resolutions
+
+### Packs
