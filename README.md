@@ -24,14 +24,22 @@ packer {
     add 'Monsters'
     add 'Hero'
     from 'path/to/resources'
-    to { resolution -> 'path/to/packs/' + resolution }
+    to 'path/to/packs'
   }
 }
 ```
 
+### Terminology
+
 ### Workflow
 
-1. 
+1. Convert all SVGs in resources paths to PNGs.
+2. (Before resize hook).
+3. Resize all PNGs in resources paths using the ratio specified for each resolution.
+4. (After resize hook).
+5. Apply 1 pixel 9-patches to all PNG ending with '.9.png.
+6. Copy 'resolutionName.json' from the resources path to the working directory, and rename it to 'pack.json'.
+7. Call the libgdx texture packer to packs the textures into the output directory (generally android assets directory).
 
 ### Resolutions
 
