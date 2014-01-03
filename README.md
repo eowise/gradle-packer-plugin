@@ -13,9 +13,7 @@ A Gradle plugin witch automatically packs texture for a libgdx game, using libgd
 ```groovy
 packer {
   resolutions {
-    // the base resolution
-    base 'xhdpi'
-    // others resolutions, with a ratio relative to the base resolution
+    add 'xhdpi'
     add 'hdpi', 0.75
     add 'mdpi', 0.5   
     add 'ldpi', 0.375

@@ -37,7 +37,7 @@ class PackerPluginExtension {
         resolutions.add('ldpi', 0.375f)
         resolutions.add('mdpi', 0.5f)
         resolutions.add('hdpi', 0.75f)
-        resolutions.base('xhdpi')
+        resolutions.add('xhdpi')
     }
     
     def beforeResize(Closure closure) {
