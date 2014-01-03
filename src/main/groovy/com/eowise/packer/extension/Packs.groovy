@@ -10,7 +10,7 @@ class Packs {
 
     final Project project
     final NamedDomainObjectContainer set
-    String resourcesPath
+    Closure resourcesPathClosure
     Closure packsPathClosure
 
     Packs(final Project project) {
@@ -21,17 +21,17 @@ class Packs {
 
     def add(String name) {
         Pack adding = new Pack(name)
-        adding.textures = project.fileTree(dir: "${resourcesPath}/${name}", include: '**/*.png')
-        adding.svgs = project.fileTree(dir: "${resourcesPath}/${name}", include: '**/*.svg')
-        adding.ninePatches = project.fileTree(dir: "${resourcesPath}/${name}", include: '**/*.9.png')
+        adding.textures = project.fileTree(dir: resourcesPath(adding), include: '**/*.png')
+        adding.svgs = project.fileTree(dir: resourcesPath(adding), include: '**/*.svg')
+        adding.ninePatches = project.fileTree(dir: resourcesPath(adding), include: '**/*.9.png')
         set.add(adding)
     }
     
     def add(String name, Closure closure) {
         Pack adding = project.configure(new Pack(name), closure)
-        if (adding.textures == null) adding.textures = project.fileTree(dir: "${resourcesPath}/${name}", include: '**/*.png')
-        if (adding.svgs == null) adding.svgs = project.fileTree(dir: "${resourcesPath}/${name}", include: '**/*.svg')
-        if (adding.ninePatches == null) adding.ninePatches = project.fileTree(dir: "${resourcesPath}/${name}", include: '**/*.9.png')
+        if (adding.textures == null) adding.textures = project.fileTree(dir: resourcesPath(adding), include: '**/*.png')
+        if (adding.svgs == null) adding.svgs = project.fileTree(dir: resourcesPath(adding), include: '**/*.svg')
+        if (adding.ninePatches == null) adding.ninePatches = project.fileTree(dir: resourcesPath(adding), include: '**/*.9.png')
         set.add(adding)
     }
     
@@ -44,14 +44,26 @@ class Packs {
     }
 
     def from(String resourcesPath) {
-        this.resourcesPath = resourcesPath
+        this.resourcesPathClosure = { Pack pack -> "${resourcesPath}/${pack}"}
+    }
+
+    def from(Closure closure) {
+        this.resourcesPathClosure = closure
     }
     
     def to(Closure closure) {
         this.packsPathClosure = closure
     }
+    
+    def to(String packsPath) {
+        this.packsPathClosure = { Resolution resolution -> "${packsPath}/${resolution}" }
+    }
 
-    def packsPath(Resolution res) {
+    String resourcesPath(Pack pack) {
+        return resourcesPathClosure(pack)
+    }
+
+    String packsPath(Resolution res) {
         return packsPathClosure(res)
     }
     

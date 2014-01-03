@@ -29,6 +29,10 @@ packer {
 }
 ```
 
+### Workflow
+
+1. 
+
 ### Resolutions
 
 ### Packs

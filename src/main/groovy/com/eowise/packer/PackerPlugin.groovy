@@ -25,7 +25,7 @@ class PackerPlugin implements Plugin<Project> {
 
                         Task convertSvgTask = tasks.create(name: "convertSvg${pack}", type: SvgToPng) {
                             files pack.svgs
-                            into "${project.packer.packs.resourcesPath}/${pack}"
+                            into project.packer.packs.resourcesPath(pack)
                         }
 
                         
@@ -80,7 +80,7 @@ class PackerPlugin implements Plugin<Project> {
                                 }
 
                                 tasks.create(name: "copyPacks${resolution}${pack}", type: Copy) {
-                                    from pack.toString(), "${project.packer.packs.resourcesPath}/${pack}"
+                                    from project.packer.packs.resourcesPath(pack)
                                     into "out/resources/${resolution}/${pack}"
                                     include "${resolution}.json"
                                     rename { f -> 'pack.json' }
