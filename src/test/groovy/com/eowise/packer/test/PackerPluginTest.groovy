@@ -1,78 +1,91 @@
 package com.eowise.packer.test
-import com.eowise.packer.extension.Pack
-import com.eowise.packer.extension.PackerPluginExtension
-import com.eowise.packer.extension.Resolution
-import org.gradle.api.DefaultTask
-import org.junit.Test
+import com.eowise.packer.Packer
+import org.gradle.api.Project
+import org.gradle.testfixtures.ProjectBuilder
+import spock.lang.Specification
 
-import static junit.framework.TestCase.*
+class PackerPluginTest extends Specification {
 
-class PackerPluginTest extends PackerTestCase{
+    protected Project project
+
+    def setup() {
+        project = ProjectBuilder.builder().build()
+        project.apply plugin: 'packer'
+    }
     
-    @Test
-    public void packerPluginAddsTasksToProject() {
-        assertTrue(project.tasks.buildPacks instanceof DefaultTask)
-        assertTrue(project.tasks.cleanPacks instanceof DefaultTask)
+    def "Can create task"() {
+        when:
+        Packer packer = project.task(type: Packer, 'packer') as Packer
+
+        then:
+        packer != null
     }
 
-    @Test
-    public void packerPluginAddsExtensionToProject() {
-        assertTrue(project.packer instanceof PackerPluginExtension)
-    }
-
-    @Test
-    public void simplePacking() {
-        String packName = 'Pack1'
+    def "Can do simple packing"() {
+        String atlasName = 'Atlas1'
         String resolutionName = 'base'
+        Packer packer = project.task(type: Packer, 'packer') as Packer
+
+        when:
+        project.configure(packer) {
+            resourcesInputPath 'resources'
+            atlasesOutputPath 'out/atlases'
+        }
+
+        packer.setup()
+
+        then:
+        project.tasks.findByName("convertSvg") != null
+    }
+
+
+    def "Can do packing with two atlases"() {
+        String atlasName = 'Atlas'
+        String resolutionName = 'base'
+        Packer packer = project.task(type: Packer, 'packer') as Packer
         
-        PackerPluginExtension packer = project.configure(project.packer) {
-            packs {
-                from 'resources'
-                to 'out/packs'
-                add packName
+        when:
+        project.configure(packer) {
+            resourcesInputPath 'resources'
+            atlasesOutputPath 'out/atlases'
+            
+            atlases {
+                add atlasName + '1'
+                add atlasName + '2'
             }
             resolutions {
                 add resolutionName
             }
         }
+        packer.setup()
 
-        Pack pack = packer.packs.getByName(packName)
-        Resolution res = packer.resolutions.isEmpty() ? null : packer.resolutions.first()
-
-        testPack(packer, pack, packName, res, resolutionName)
+        then:
+        project.tasks.findByName("convertSvg${atlasName}1") != null
+        project.tasks.findByName("convertSvg${atlasName}2") != null
     }
 
-    @Test
-    public void closurePacking() {
-        String packName = 'Pack1'
+    public void "Can do packing with closures"() {
+        String atlasName = 'Atlas1'
         String resolutionName = 'base'
-
-        PackerPluginExtension packer = project.configure(project.packer) {
-            packs {
-                from { pack -> "resources/${pack}" }
-                to { resolution -> "out/packs/${resolution}" }
-                add packName
+        Packer packer = project.task(type: Packer, 'packer') as Packer
+        
+        when:
+        project.configure(packer) {
+            resourcesInputPath { atlas -> "resources/${atlas}" }
+            atlasesOutputPath { resolution -> "out/atlases/${resolution}" }
+            
+            atlases {
+                add  atlasName
             }
             resolutions {
                 add resolutionName
             }
         }
 
-        Pack pack = packer.packs.getByName(packName)
-        Resolution res = packer.resolutions.isEmpty() ? null : packer.resolutions.first()
+        packer.setup()
 
-        testPack(packer, pack, packName, res, resolutionName)
+        then:
+        project.tasks.getByName("convertSvg${atlasName}") != null
     }
-    
-    public void testPack(PackerPluginExtension packer, Pack pack, String packName, Resolution res, String resolutionName) {
-        assertNotNull(pack)
-        assertNotNull(res)
-        assertTrue(pack.toString() == packName)
-        assertTrue(res.toString() == resolutionName)
-
-        assertTrue(packer.packs.packsPath(res) == "out/packs/${resolutionName}")
-        assertTrue(packer.packs.resourcesPath(pack) == "resources/${packName}")
-    }
-    
     
 }
