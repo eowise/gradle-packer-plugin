@@ -6,7 +6,7 @@ package com.eowise.packer.extension
 class Resolutions extends ArrayList<Resolution> {
         
     def add(String name, float ratio) {
-        add(new Resolution(name, ratio))
+        add(new NamedResolution(name, ratio))
     }
 
     def add(String name) {

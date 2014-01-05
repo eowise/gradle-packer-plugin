@@ -6,18 +6,18 @@ class Hook {
 
 
     Closure configure
-    List<String> applyToPacks
+    List<String> applyToAtlases
 
     Hook() {
-        this.applyToPacks = []
+        this.applyToAtlases = []
     }
     
     def configure(Closure configure) {
         this.configure = configure
     }
     
-    def applyToPacks(String... packs) {
-        this.applyToPacks.addAll(packs)
+    def applyToPacks(String... atlases) {
+        this.applyToAtlases.addAll(atlases)
     }
 
 }

@@ -1,37 +1,184 @@
 package com.eowise.packer
-
+import com.eowise.imagemagick.tasks.Magick
+import com.eowise.imagemagick.tasks.SvgToPng
+import com.eowise.packer.extension.Atlas
+import com.eowise.packer.extension.Atlases
+import com.eowise.packer.extension.Resolution
+import com.eowise.packer.extension.Resolutions
+import com.eowise.packer.hooks.Hook
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.*
-import org.gradle.api.tasks.*
-
+import org.gradle.api.Named
+import org.gradle.api.Task
+import org.gradle.api.file.FileTree
+import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.Input
 /**
- * Created by aurel on 15/12/13.
+ * Created by aurel on 04/01/14.
  */
 class Packer extends DefaultTask {
 
-    @InputFiles
-    FileTree resourcesFiles
     @Input
-    String packName
-    @OutputFiles
-    FileTree outputFiles
+    private Resolution uniqueResolution
+    @Input
+    private Resolutions resolutions
+    @Input
+    private Atlas uniqueAtlas
+    @Input
+    private Atlases atlases
 
-    def from(String packName, String resourcesPath) {
-        this.packName = packName
-        this.resourcesFiles = project.fileTree(dir: "${resourcesPath}/${packName}", include: '**/*')
-    }
-
-    def into(String outputPath) {
-        outputFiles = project.fileTree(dir: outputPath, include: "${packName}*")
-    }
-
-    @TaskAction
-    def pack() {
-        project.javaexec {
-            main = 'com.badlogic.gdx.tools.imagepacker.TexturePacker2'
-            classpath project.configurations.tools
-            args resourcesFiles.getDir(), outputFiles.getDir(), packName
+    Closure resourcesPathClosure
+    Closure atlasesPathClosure
+    List<Hook> beforeResize
+    List<Hook> afterResize
+    
+    Packer() {
+        this.uniqueResolution = extensions.create('resolution', Resolution)
+        this.uniqueAtlas = extensions.create('atlas', Atlas)
+        this.resolutions = extensions.create('resolutions', Resolutions)
+        this.atlases = extensions.create('atlases', Atlases, project)
+        this.beforeResize = []
+        this.afterResize = []
+        
+        project.configure(project) {
+            afterEvaluate {
+                this.setup()
+            }
         }
     }
 
+    def defaultResolutions() {
+        resolutions.add('ldpi', 0.375f)
+        resolutions.add('mdpi', 0.5f)
+        resolutions.add('hdpi', 0.75f)
+        resolutions.add('xhdpi')
+    }
+    
+    def resourcesInputPath(String resourcesPath) {
+        this.resourcesPathClosure = { Atlas atlas -> atlas instanceof Named ? "${resourcesPath}/${atlas}" : resourcesPath }
+    }
+
+    def resourcesInputPath(Closure closure) {
+        this.resourcesPathClosure = closure
+    }
+
+    def atlasesOutputPath(Closure closure) {
+        this.atlasesPathClosure = closure
+    }
+
+    def atlasesOutputPath(String atlasesPath) {
+        this.atlasesPathClosure = { Resolution resolution -> "${atlasesPath}/${resolution}" }
+    }
+
+    String resourcesPath(Atlas atlas) {
+        return resourcesPathClosure(atlas)
+    }
+
+    String atlasesPath(Resolution res) {
+        return atlasesPathClosure(res)
+    }
+
+    def beforeResize(Closure closure) {
+        beforeResize.add(project.configure(new Hook(), closure) as Hook)
+    }
+
+    def afterResize(Closure closure) {
+        afterResize.add(project.configure(new Hook(), closure) as Hook)
+    }
+
+    def setup() {
+
+        if (atlases.size() == 0)
+            atlases.add(uniqueAtlas)
+        
+        if (resolutions.size() == 0)
+            resolutions.add(uniqueResolution)
+        
+        atlases.each() {
+            atlas ->
+
+                FileTree textures = project.fileTree(dir: resourcesPath(atlas), include: '**/*.png').matching(atlas.textures)
+                FileTree ninePatches = project.fileTree(dir: resourcesPath(atlas), include: '**/*.9.png').matching(atlas.ninePatches)
+                FileTree svgs = project.fileTree(dir: resourcesPath(atlas), include: '**/*.svg').matching(atlas.svgs)
+
+
+                Task convertSvgTask = project.tasks.create(name: "convertSvg${atlas}", type: SvgToPng) {
+                    files svgs
+                    into resourcesPath(atlas)
+                }
+
+
+                resolutions.each() {
+                    resolution ->
+
+                        Task resizeImagesTask = project.tasks.create(name: "resizeImages${resolution}${atlas}", type: Magick, dependsOn: "convertSvg${atlas}")
+
+                        beforeResize.each {
+                            Hook hook ->
+                                // if applyToAtlases is not set, we apply the hook to all atlases
+                                if (hook.applyToAtlases.contains(atlas.toString()) || hook.applyToAtlases.size() == 0) {
+                                    hook.configure.ext.set('textures', textures)
+                                    hook.configure.ext.set('ninePatches', ninePatches)
+                                    hook.configure.ext.set('svgs', svgs)
+                                    project.configure(resizeImagesTask, hook.configure)
+                                }
+                        }
+
+                        project.configure(resizeImagesTask) {
+                            input textures
+                            output "out/resources/${resolution}/${atlas}"
+                            convert {
+                                resize resolution.ratio
+                            }
+                        }
+
+                        afterResize.each {
+                            Hook hook ->
+                                // if applyToAtlases is not set, we apply the hook to all atlases
+                                if (hook.applyToAtlases.contains(atlas.toString()) || hook.applyToAtlases.size() == 0) {
+                                    hook.configure.ext.set('textures', textures)
+                                    hook.configure.ext.set('ninePatches', ninePatches)
+                                    hook.configure.ext.set('svgs', svgs)
+                                    project.configure(resizeImagesTask, hook.configure)
+                                }
+                        }
+
+                        project.configure(resizeImagesTask) {
+                            convert {
+                                condition ninePatches, {
+                                    border {
+                                        color 'none'
+                                        width 1
+                                    }
+                                    xc 'black'
+                                    gravity 'North'
+                                    geometry '1x1+0x+0'
+                                    composite()
+                                    xc 'black'
+                                    gravity 'West'
+                                    geometry '1x1+0x+0'
+                                    composite()
+                                }
+                            }
+                        }
+
+                        project.tasks.create(name: "copyPacks${resolution}${atlas}", type: Copy) {
+                            from resourcesPath(atlas)
+                            into "out/resources/${resolution}/${atlas}"
+                            include "${resolution}.json"
+                            rename { f -> 'pack.json' }
+                        }
+
+                        Task createPacksTask = project.tasks.create(name: "createPacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["resizeImages${resolution}${atlas}", "copyPacks${resolution}${atlas}"]) {
+                            from atlas.toString(), "out/resources/${resolution}"
+                            into atlasesPath(resolution)
+                        }
+
+                        dependsOn "createPacks${resolution}${atlas}"
+                        //project.cleanPacks.dependsOn "cleanCreatePacks${resolution}${atlas}"
+                        //project.cleanPacks.dependsOn "cleanResizeImages${resolution}${atlas}"
+                }
+        }
+    }
+    
+    
 }
