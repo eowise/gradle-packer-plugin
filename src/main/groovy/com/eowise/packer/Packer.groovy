@@ -101,7 +101,7 @@ class Packer extends DefaultTask {
                 FileTree svgs = project.fileTree(dir: resourcesPath(atlas), include: '**/*.svg').matching(atlas.svgs)
 
 
-                Task convertSvgTask = project.tasks.create(name: "convertSvg${atlas}", type: SvgToPng) {
+                Task convertSvgTask = project.tasks.create(name: "${name}ConvertSvg${atlas}", type: SvgToPng) {
                     files svgs
                     into resourcesPath(atlas)
                 }
@@ -110,7 +110,7 @@ class Packer extends DefaultTask {
                 resolutions.each() {
                     resolution ->
 
-                        Task resizeImagesTask = project.tasks.create(name: "resizeImages${resolution}${atlas}", type: Magick, dependsOn: "convertSvg${atlas}")
+                        Task resizeImagesTask = project.tasks.create(name: "${name}ResizeImages${resolution}${atlas}", type: Magick, dependsOn: "${name}ConvertSvg${atlas}")
 
                         beforeResize.each {
                             Hook hook ->
@@ -161,14 +161,14 @@ class Packer extends DefaultTask {
                             }
                         }
 
-                        project.tasks.create(name: "copyPacks${resolution}${atlas}", type: Copy) {
+                        project.tasks.create(name: "${name}CopyPacks${resolution}${atlas}", type: Copy) {
                             from resourcesPath(atlas)
                             into "out/resources/${resolution}/${atlas}"
                             include "${resolution}.json"
                             rename { f -> 'pack.json' }
                         }
 
-                        Task createPacksTask = project.tasks.create(name: "createPacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["resizeImages${resolution}${atlas}", "copyPacks${resolution}${atlas}"]) {
+                        Task createPacksTask = project.tasks.create(name: "${name}CreatePacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["${name}ResizeImages${resolution}${atlas}", "${name}CopyPacks${resolution}${atlas}"]) {
                             from atlas.toString(), "out/resources/${resolution}"
                             into atlasesPath(resolution)
                         }

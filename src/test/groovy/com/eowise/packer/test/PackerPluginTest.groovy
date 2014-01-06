@@ -24,7 +24,7 @@ class PackerPluginTest extends Specification {
     def "Can do simple packing"() {
         String atlasName = 'Atlas1'
         String resolutionName = 'base'
-        Packer packer = project.task(type: Packer, 'packer') as Packer
+        Packer packer = project.task(type: Packer, 'packerSimple') as Packer
 
         when:
         project.configure(packer) {
@@ -35,14 +35,14 @@ class PackerPluginTest extends Specification {
         packer.setup()
 
         then:
-        project.tasks.findByName("convertSvg") != null
+        dependenciesCreated('packerSimple')
     }
 
 
     def "Can do packing with two atlases"() {
         String atlasName = 'Atlas'
         String resolutionName = 'base'
-        Packer packer = project.task(type: Packer, 'packer') as Packer
+        Packer packer = project.task(type: Packer, 'packerTwoAtlases') as Packer
         
         when:
         project.configure(packer) {
@@ -60,14 +60,14 @@ class PackerPluginTest extends Specification {
         packer.setup()
 
         then:
-        project.tasks.findByName("convertSvg${atlasName}1") != null
-        project.tasks.findByName("convertSvg${atlasName}2") != null
+        dependenciesCreated('packerTwoAtlases', atlasName + '1', resolutionName)
+        dependenciesCreated('packerTwoAtlases', atlasName + '2', resolutionName)
     }
 
     public void "Can do packing with closures"() {
         String atlasName = 'Atlas1'
         String resolutionName = 'base'
-        Packer packer = project.task(type: Packer, 'packer') as Packer
+        Packer packer = project.task(type: Packer, 'packerClosures') as Packer
         
         when:
         project.configure(packer) {
@@ -85,7 +85,13 @@ class PackerPluginTest extends Specification {
         packer.setup()
 
         then:
-        project.tasks.getByName("convertSvg${atlasName}") != null
+        dependenciesCreated('packerClosures', atlasName, resolutionName)
     }
     
+    void dependenciesCreated(String taskName, String atlasName = '', String resolutionName = '') {
+        assert project.tasks.getByName("${taskName}ConvertSvg${atlasName}") != null
+        assert project.tasks.getByName("${taskName}ResizeImages${resolutionName}${atlasName}") != null
+        assert project.tasks.getByName("${taskName}CopyPacks${resolutionName}${atlasName}") != null
+        assert project.tasks.getByName("${taskName}CreatePacks${resolutionName}${atlasName}") != null
+    }
 }
