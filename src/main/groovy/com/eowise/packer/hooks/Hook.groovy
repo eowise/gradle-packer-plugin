@@ -16,7 +16,7 @@ class Hook {
         this.configure = configure
     }
     
-    def applyToPacks(String... atlases) {
+    def applyToAtlases(String... atlases) {
         this.applyToAtlases.addAll(atlases)
     }
 

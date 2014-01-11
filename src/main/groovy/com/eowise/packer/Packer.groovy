@@ -101,7 +101,7 @@ class Packer extends DefaultTask {
                 FileTree svgs = project.fileTree(dir: resourcesPath(atlas), include: '**/*.svg').matching(atlas.svgs)
 
 
-                Task convertSvgTask = project.tasks.create(name: "${name}ConvertSvg${atlas}", type: SvgToPng) {
+                project.tasks.create(name: "${name}ConvertSvg${atlas}", type: SvgToPng) {
                     files svgs
                     into resourcesPath(atlas)
                 }
@@ -168,7 +168,7 @@ class Packer extends DefaultTask {
                             rename { f -> 'pack.json' }
                         }
 
-                        Task createPacksTask = project.tasks.create(name: "${name}CreatePacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["${name}ResizeImages${resolution}${atlas}", "${name}CopyPacks${resolution}${atlas}"]) {
+                        project.tasks.create(name: "${name}CreatePacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["${name}ResizeImages${resolution}${atlas}", "${name}CopyPacks${resolution}${atlas}"]) {
                             from atlas.toString(), "out/resources/${resolution}"
                             into atlasesPath(resolution)
                         }
