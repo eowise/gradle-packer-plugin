@@ -96,7 +96,7 @@ class Packer extends DefaultTask {
         atlases.each() {
             atlas ->
 
-                FileTree textures = project.fileTree(dir: resourcesPath(atlas), include: '**/*.png').matching(atlas.textures)
+                FileTree textures = project.fileTree(dir: resourcesPath(atlas), include: ['**/*.png', '**/*.jpg']).matching(atlas.textures)
                 FileTree ninePatches = project.fileTree(dir: resourcesPath(atlas), include: '**/*.9.png').matching(atlas.ninePatches)
                 FileTree svgs = project.fileTree(dir: resourcesPath(atlas), include: '**/*.svg').matching(atlas.svgs)
 
@@ -173,7 +173,7 @@ class Packer extends DefaultTask {
                             into atlasesPath(resolution)
                         }
 
-                        dependsOn "createPacks${resolution}${atlas}"
+                        dependsOn "${name}CreatePacks${resolution}${atlas}"
                         //project.cleanPacks.dependsOn "cleanCreatePacks${resolution}${atlas}"
                         //project.cleanPacks.dependsOn "cleanResizeImages${resolution}${atlas}"
                 }
