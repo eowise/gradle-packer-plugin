@@ -101,16 +101,20 @@ class Packer extends DefaultTask {
                 FileTree svgs = project.fileTree(dir: resourcesPath(atlas), include: '**/*.svg').matching(atlas.svgs)
 
 
-                project.tasks.create(name: "${name}ConvertSvg${atlas}", type: SvgToPng) {
+
+                Task convertSvg = project.tasks.create(name: "${name}ConvertSvg${atlas}", type: SvgToPng) {
                     files svgs
                     into resourcesPath(atlas)
                 }
 
+                dependsOn.each { d -> convertSvg.mustRunAfter d }
 
                 resolutions.each() {
                     resolution ->
 
                         Task resizeImagesTask = project.tasks.create(name: "${name}ResizeImages${resolution}${atlas}", type: Magick, dependsOn: "${name}ConvertSvg${atlas}")
+
+                        dependsOn.each { d -> resizeImagesTask.mustRunAfter d }
 
                         beforeResize.each {
                             Hook hook ->
