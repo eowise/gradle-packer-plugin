@@ -27,10 +27,16 @@ class TexturePacker extends DefaultTask {
 
     @TaskAction
     def pack() {
+        arguments = []
+
+        arguments.add(resourcesFiles.getDir())
+        arguments.add(outputFiles.getDir())
+        if (packName != '') arguments.add(packName)
+
         project.javaexec {
             main = 'com.badlogic.gdx.tools.imagepacker.TexturePacker2'
             classpath project.configurations.tools
-            args resourcesFiles.getDir(), outputFiles.getDir(), packName
+            args arguments
         }
     }
 
