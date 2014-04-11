@@ -131,7 +131,7 @@ class Packer extends DefaultTask {
                             input textures
                             output "out/resources/${resolution}/${atlas}"
                             convert {
-                                resize resolution.ratio
+                                -resize(resolution.ratio * 100 + '%')
                             }
                         }
 
@@ -149,18 +149,17 @@ class Packer extends DefaultTask {
                         project.configure(resizeImagesTask) {
                             convert {
                                 condition ninePatches, {
-                                    border {
-                                        color 'none'
-                                        width 1
-                                    }
-                                    xc 'black'
-                                    gravity 'North'
-                                    geometry '1x1+0x+0'
-                                    composite()
-                                    xc 'black'
-                                    gravity 'West'
-                                    geometry '1x1+0x+0'
-                                    composite()
+                                    -matte
+                                    -color('none')
+                                    -width(1)
+                                    xc('black')
+                                    -gravity('North')
+                                    -geometry('1x1+0x+0')
+                                    -composite
+                                    xc('black')
+                                    -gravity('West')
+                                    -geometry('1x1+0x+0')
+                                    -composite
                                 }
                             }
                         }
