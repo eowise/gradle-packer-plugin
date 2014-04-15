@@ -11,9 +11,13 @@ class Atlas {
     PatternSet ninePatches
 
     Atlas() {
-        this.textures = new PatternSet()
+        this.textures = new PatternSet() {  }
         this.svgs = new PatternSet()
         this.ninePatches = new PatternSet()
+
+        textures.include '**/*.png', '**/*.jpg'
+        svgs.include  '**/*.svg'
+        ninePatches.include '**/*.9.png'
     }
 
     String toString() {

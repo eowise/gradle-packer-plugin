@@ -96,15 +96,17 @@ class Packer extends DefaultTask {
         atlases.each() {
             atlas ->
 
-                FileTree textures = project.fileTree(dir: resourcesPath(atlas), include: ['**/*.png', '**/*.jpg']).matching(atlas.textures)
-                FileTree ninePatches = project.fileTree(dir: resourcesPath(atlas), include: '**/*.9.png').matching(atlas.ninePatches)
-                FileTree svgs = project.fileTree(dir: resourcesPath(atlas), include: '**/*.svg').matching(atlas.svgs)
+
+                //FileTree textures = project.fileTree(dir: resourcesPath(atlas), include: ['**/*.png', '**/*.jpg']).matching(atlas.textures)
+                //FileTree ninePatches = project.fileTree(dir: resourcesPath(atlas), include: '**/*.9.png').matching(atlas.ninePatches)
+                //FileTree svgs = project.fileTree(dir: resourcesPath(atlas), include: '**/*.svg').matching(atlas.svgs)
 
 
-
-                Task convertSvg = project.tasks.create(name: "${name}ConvertSvg${atlas}", type: SvgToPng) {
-                    files svgs
+                Task convertSvg = project.tasks.create(name: "${name}ConvertSvg${atlas}", type: Magick) {
+                    convert {}
+                    from resourcesPath(atlas), atlas.svgs
                     into resourcesPath(atlas)
+                    rename { fileName, extension -> "${fileName}.png" }
                 }
 
                 dependsOn.each { d -> convertSvg.mustRunAfter d }
@@ -128,11 +130,11 @@ class Packer extends DefaultTask {
                         }
 
                         project.configure(resizeImagesTask) {
-                            input textures
-                            output "out/resources/${resolution}/${atlas}"
                             convert {
                                 -resize(resolution.ratio * 100 + '%')
                             }
+                            from resourcesPath(atlas), atlas.textures
+                            into "out/resources/${resolution}/${atlas}"
                         }
 
                         afterResize.each {
@@ -148,7 +150,7 @@ class Packer extends DefaultTask {
 
                         project.configure(resizeImagesTask) {
                             convert {
-                                condition ninePatches, {
+                                condition atlas.ninePatches, {
                                     -matte
                                     -color('none')
                                     -width(1)
