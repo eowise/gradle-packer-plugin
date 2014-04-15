@@ -27,7 +27,7 @@ class TexturePacker extends DefaultTask {
 
     @TaskAction
     def pack() {
-        arguments = []
+        def arguments = []
 
         arguments.add(resourcesFiles.getDir())
         arguments.add(outputFiles.getDir())
