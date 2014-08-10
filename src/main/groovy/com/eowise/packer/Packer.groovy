@@ -61,6 +61,7 @@ class Packer extends DefaultTask {
         this.resourcesPathClosure = closure
     }
 
+
     def atlasesOutputPath(Closure closure) {
         this.atlasesPathClosure = closure
     }
@@ -103,10 +104,12 @@ class Packer extends DefaultTask {
 
 
                 Task convertSvg = project.tasks.create(name: "${name}ConvertSvg${atlas}", type: Magick) {
-                    convert {}
-                    from resourcesPath(atlas), atlas.svgs
+                    convert resourcesPath(atlas), atlas.svgs
                     into resourcesPath(atlas)
-                    rename { fileName, extension -> "${fileName}.png" }
+                    actions {
+                        inputFile()
+                        outputFile { fileName, extension -> "${fileName}.png" }
+                    }
                 }
 
                 dependsOn.each { d -> convertSvg.mustRunAfter d }
@@ -130,11 +133,14 @@ class Packer extends DefaultTask {
                         }
 
                         project.configure(resizeImagesTask) {
-                            convert {
+                            convert resourcesPath(atlas), atlas.textures
+                            into "out/resources/${resolution}/${atlas}"
+                            actions {
+                                inputFile()
                                 -resize(resolution.ratio * 100 + '%')
                             }
-                            from resourcesPath(atlas), atlas.textures
-                            into "out/resources/${resolution}/${atlas}"
+
+
                         }
 
                         afterResize.each {
@@ -149,7 +155,7 @@ class Packer extends DefaultTask {
                         }
 
                         project.configure(resizeImagesTask) {
-                            convert {
+                            actions {
                                 condition atlas.ninePatches, {
                                     -matte
                                     -color('none')
@@ -163,6 +169,7 @@ class Packer extends DefaultTask {
                                     -geometry('1x1+0x+0')
                                     -composite
                                 }
+                                outputFile()
                             }
                         }
 

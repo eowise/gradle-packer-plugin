@@ -1,18 +1,55 @@
 apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 repositories {
     mavenCentral()
-    mavenLocal()
+    maven {
+        url 'https://oss.sonatype.org/content/repositories/releases/'
+    }
 }
 
 dependencies {
     compile gradleApi()
     compile localGroovy()
-    compile 'com.eowise:gradle-imagemagick:0.2.0-SNAPSHOT'
+    compile 'com.eowise:gradle-imagemagick:0.3.0'
     testCompile 'org.spockframework:spock-core:0.7-groovy-1.8'
 }
 
-apply plugin: 'maven'
 
 group = 'com.eowise'
-version = '0.5.1-SNAPSHOT'
+version = '0.5.0-SNAPSHOT'
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            pom.project {
+                packaging 'jar'
+                parent {
+                    groupId 'org.sonatype.oss'
+                    artifactId 'oss-parent'
+                    version 7
+                }
+                scm {
+                    connection 'scm:git:git@github.com:eowise/gradle-packer-plugin.git'
+                    developerConnection 'scm:git:git@github.com:eowise/gradle-packer-plugin.git'
+                    url 'git@github.com:eowise/gradle-packer-plugin.git'
+                }
+            }
+        }
+    }
+}
