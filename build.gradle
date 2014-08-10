@@ -16,6 +16,21 @@ dependencies {
     testCompile 'org.spockframework:spock-core:0.7-groovy-1.8'
 }
 
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+artifacts {
+    archives jar
+    archives javadocJar
+    archives sourcesJar
+}
 
 group = 'com.eowise'
 version = '0.5.0'
