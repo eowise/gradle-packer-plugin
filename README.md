@@ -12,11 +12,12 @@ A Gradle plugin witch automatically packs texture for a libgdx game, using libgd
 buildscript {
   repositories {
     maven {
-      url: 'https://oss.sonatype.org/content/repositories/snapshots/'
+      url 'https://oss.sonatype.org/content/repositories/releases/'
+    }
   }
 
   dependencies {
-    classpath 'com.eowise:packer:0.5.0-SNAPSHOT'
+    classpath 'com.eowise:packer:0.5.0'
   }
 }
 
