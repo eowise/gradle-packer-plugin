@@ -125,9 +125,9 @@ class Packer extends DefaultTask {
                             Hook hook ->
                                 // if applyToAtlases is not set, we apply the hook to all atlases
                                 if (hook.applyToAtlases.contains(atlas.toString()) || hook.applyToAtlases.size() == 0) {
-                                    hook.configure.ext.set('textures', textures)
-                                    hook.configure.ext.set('ninePatches', ninePatches)
-                                    hook.configure.ext.set('svgs', svgs)
+                                    hook.configure.ext.set('textures', atlas.textures)
+                                    hook.configure.ext.set('ninePatches', atlas.ninePatches)
+                                    hook.configure.ext.set('svgs', atlas.svgs)
                                     project.configure(resizeImagesTask, hook.configure)
                                 }
                         }
@@ -147,9 +147,9 @@ class Packer extends DefaultTask {
                             Hook hook ->
                                 // if applyToAtlases is not set, we apply the hook to all atlases
                                 if (hook.applyToAtlases.contains(atlas.toString()) || hook.applyToAtlases.size() == 0) {
-                                    hook.configure.ext.set('textures', textures)
-                                    hook.configure.ext.set('ninePatches', ninePatches)
-                                    hook.configure.ext.set('svgs', svgs)
+                                    hook.configure.ext.set('textures', atlas.textures)
+                                    hook.configure.ext.set('ninePatches', atlas.ninePatches)
+                                    hook.configure.ext.set('svgs', atlas.svgs)
                                     project.configure(resizeImagesTask, hook.configure)
                                 }
                         }
