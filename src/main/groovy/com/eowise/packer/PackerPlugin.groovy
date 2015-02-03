@@ -7,7 +7,7 @@ class PackerPlugin implements Plugin<Project> {
 
     void apply(Project project) {
         project.configurations.create('tools')
-        project.dependencies.add('tools', 'com.badlogicgames.gdx:gdx-tools:0.9.9')
+        project.dependencies.add('tools', 'com.badlogicgames.gdx:gdx-tools:1.5.3')
         project.task("buildPacks")
         project.task("cleanPacks")
     }

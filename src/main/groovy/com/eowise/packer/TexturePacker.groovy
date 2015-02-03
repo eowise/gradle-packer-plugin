@@ -34,7 +34,7 @@ class TexturePacker extends DefaultTask {
         if (packName != '') arguments.add(packName)
 
         project.javaexec {
-            main = 'com.badlogic.gdx.tools.imagepacker.TexturePacker2'
+            main = 'com.badlogic.gdx.tools.texturepacker.TexturePacker'
             classpath project.configurations.tools
             args arguments
         }
