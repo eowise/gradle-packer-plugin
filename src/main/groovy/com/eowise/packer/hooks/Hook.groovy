@@ -4,20 +4,12 @@ package com.eowise.packer.hooks
  */
 class Hook {
 
-
-    Closure configure
+    Closure task
     List<String> applyToAtlases
 
-    Hook() {
-        this.applyToAtlases = []
-    }
-    
-    def configure(Closure configure) {
-        this.configure = configure
-    }
-    
-    def applyToAtlases(String... atlases) {
-        this.applyToAtlases.addAll(atlases)
+    Hook(Closure task, String... atlases) {
+        this.task = task
+        this.applyToAtlases = atlases
     }
 
 }

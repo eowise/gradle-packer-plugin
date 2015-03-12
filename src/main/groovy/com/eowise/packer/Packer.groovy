@@ -1,15 +1,15 @@
 package com.eowise.packer
 import com.eowise.imagemagick.tasks.Magick
-import com.eowise.imagemagick.tasks.SvgToPng
 import com.eowise.packer.extension.Atlas
 import com.eowise.packer.extension.Atlases
+import com.eowise.packer.extension.NamedAtlas
 import com.eowise.packer.extension.Resolution
 import com.eowise.packer.extension.Resolutions
 import com.eowise.packer.hooks.Hook
+import com.eowise.packer.hooks.Hooks
 import org.gradle.api.DefaultTask
 import org.gradle.api.Named
 import org.gradle.api.Task
-import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Input
 /**
@@ -25,19 +25,22 @@ class Packer extends DefaultTask {
     private Atlas uniqueAtlas
     @Input
     private Atlases atlases
+    @Input
+    private Hooks beforeResize
+    @Input
+    private Hooks afterResize
 
     Closure resourcesPathClosure
     Closure atlasesPathClosure
-    List<Hook> beforeResize
-    List<Hook> afterResize
+
     
     Packer() {
         this.uniqueResolution = extensions.create('resolution', Resolution)
         this.uniqueAtlas = extensions.create('atlas', Atlas)
         this.resolutions = extensions.create('resolutions', Resolutions)
         this.atlases = extensions.create('atlases', Atlases, project)
-        this.beforeResize = []
-        this.afterResize = []
+        this.beforeResize = extensions.create('beforeResize', Hooks)
+        this.afterResize = extensions.create('afterResize', Hooks)
         
         project.configure(project) {
             afterEvaluate {
@@ -78,14 +81,6 @@ class Packer extends DefaultTask {
         return atlasesPathClosure(res)
     }
 
-    def beforeResize(Closure closure) {
-        beforeResize.add(project.configure(new Hook(), closure) as Hook)
-    }
-
-    def afterResize(Closure closure) {
-        afterResize.add(project.configure(new Hook(), closure) as Hook)
-    }
-
     def setup() {
 
         if (atlases.size() == 0)
@@ -96,12 +91,6 @@ class Packer extends DefaultTask {
         
         atlases.each() {
             atlas ->
-
-
-                //FileTree textures = project.fileTree(dir: resourcesPath(atlas), include: ['**/*.png', '**/*.jpg']).matching(atlas.textures)
-                //FileTree ninePatches = project.fileTree(dir: resourcesPath(atlas), include: '**/*.9.png').matching(atlas.ninePatches)
-                //FileTree svgs = project.fileTree(dir: resourcesPath(atlas), include: '**/*.svg').matching(atlas.svgs)
-
 
                 Task convertSvg = project.tasks.create(name: "${name}ConvertSvg${atlas}", type: Magick) {
                     convert resourcesPath(atlas), atlas.svgs
@@ -121,16 +110,16 @@ class Packer extends DefaultTask {
 
                         dependsOn.each { d -> resizeImagesTask.mustRunAfter d }
 
+                        /*
                         beforeResize.each {
                             Hook hook ->
                                 // if applyToAtlases is not set, we apply the hook to all atlases
                                 if (hook.applyToAtlases.contains(atlas.toString()) || hook.applyToAtlases.size() == 0) {
-                                    hook.configure.ext.set('textures', atlas.textures)
-                                    hook.configure.ext.set('ninePatches', atlas.ninePatches)
-                                    hook.configure.ext.set('svgs', atlas.svgs)
-                                    project.configure(resizeImagesTask, hook.configure)
+
+                                    project.configure(resizeImagesTask, hook.task)
                                 }
                         }
+                        */
 
                         project.configure(resizeImagesTask) {
                             convert resourcesPath(atlas), atlas.textures
@@ -138,40 +127,12 @@ class Packer extends DefaultTask {
                             actions {
                                 inputFile()
                                 -resize(resolution.ratio * 100 + '%')
-                            }
-
-
-                        }
-
-                        afterResize.each {
-                            Hook hook ->
-                                // if applyToAtlases is not set, we apply the hook to all atlases
-                                if (hook.applyToAtlases.contains(atlas.toString()) || hook.applyToAtlases.size() == 0) {
-                                    hook.configure.ext.set('textures', atlas.textures)
-                                    hook.configure.ext.set('ninePatches', atlas.ninePatches)
-                                    hook.configure.ext.set('svgs', atlas.svgs)
-                                    project.configure(resizeImagesTask, hook.configure)
-                                }
-                        }
-
-                        project.configure(resizeImagesTask) {
-                            actions {
-                                condition atlas.ninePatches, {
-                                    -matte
-                                    -color('none')
-                                    -width(1)
-                                    xc('black')
-                                    -gravity('North')
-                                    -geometry('1x1+0x+0')
-                                    -composite
-                                    xc('black')
-                                    -gravity('West')
-                                    -geometry('1x1+0x+0')
-                                    -composite
-                                }
                                 outputFile()
                             }
+
+
                         }
+
 
                         project.tasks.create(name: "${name}CopyPacks${resolution}${atlas}", type: Copy) {
                             from resourcesPath(atlas)
@@ -180,9 +141,20 @@ class Packer extends DefaultTask {
                             rename { f -> 'pack.json' }
                         }
 
-                        project.tasks.create(name: "${name}CreatePacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["${name}ResizeImages${resolution}${atlas}", "${name}CopyPacks${resolution}${atlas}"]) {
+                        def createPacks = project.tasks.create(name: "${name}CreatePacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["${name}ResizeImages${resolution}${atlas}", "${name}CopyPacks${resolution}${atlas}"]) {
                             from atlas.toString(), "out/resources/${resolution}"
                             into atlasesPath(resolution)
+                        }
+
+                        afterResize.each {
+                            Hook hook ->
+                                // if applyToAtlases is not set, we apply the hook to all atlases
+                                if (hook.applyToAtlases.contains(atlas.toString()) || hook.applyToAtlases.size() == 0) {
+                                    Task afterResizeHook = hook.task(atlas.toString(), resolution.toString())
+
+                                    afterResizeHook.mustRunAfter resizeImagesTask
+                                    createPacks.dependsOn afterResizeHook
+                                }
                         }
 
                         dependsOn "${name}CreatePacks${resolution}${atlas}"

@@ -3,7 +3,6 @@
 A Gradle plugin witch automatically packs texture for a libgdx game, using libgdx [texture packer](https://github.com/libgdx/libgdx/wiki/Texture-packer#wiki-NinePatches). Before packing, the plugin can do some actions on the resources provided, such as :
 
 * Resize images for variants
-* generate 1 pixel 9-patches automatically
 * Convert SVG to PNG images
 
 ## Install
@@ -35,9 +34,8 @@ This task will do the folowing actions :
 
 1. Convert all SVGs to PNGs in the 'path/to/resources' tree
 2. Copy all PNGs do a working directory
-3. Add a 1 pixel 9-patch to all PNGs ending with '.9.png'
-4. Copy all file named 'pack.json' from the resouces path to the working directory
-5. Call the libgdx texture packer to packs the textures from the working directory into the 'path/to/atlases' directory (generally android assets directory)
+3. Copy all file named 'pack.json' from the resouces path to the working directory
+4. Call the libgdx texture packer to packs the textures from the working directory into the 'path/to/atlases' directory (generally android assets directory)
 
 ### Resolutions
 
