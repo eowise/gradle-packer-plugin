@@ -5,8 +5,6 @@ import com.eowise.packer.extension.Atlases
 import com.eowise.packer.extension.NamedAtlas
 import com.eowise.packer.extension.Resolution
 import com.eowise.packer.extension.Resolutions
-import com.eowise.packer.hooks.Hook
-import com.eowise.packer.hooks.Hooks
 import org.gradle.api.DefaultTask
 import org.gradle.api.Named
 import org.gradle.api.Task
@@ -25,10 +23,6 @@ class Packer extends DefaultTask {
     private Atlas uniqueAtlas
     @Input
     private Atlases atlases
-    @Input
-    private Hooks beforeResize
-    @Input
-    private Hooks afterResize
 
     Closure resourcesPathClosure
     Closure atlasesPathClosure
@@ -39,8 +33,6 @@ class Packer extends DefaultTask {
         this.uniqueAtlas = extensions.create('atlas', Atlas)
         this.resolutions = extensions.create('resolutions', Resolutions)
         this.atlases = extensions.create('atlases', Atlases, project)
-        this.beforeResize = extensions.create('beforeResize', Hooks)
-        this.afterResize = extensions.create('afterResize', Hooks)
         
         project.configure(project) {
             afterEvaluate {
@@ -79,6 +71,15 @@ class Packer extends DefaultTask {
 
     String atlasesPath(Resolution res) {
         return atlasesPathClosure(res)
+    }
+
+    def atlas(Map<String, ?> args) {
+        def atlas = new NamedAtlas((String)args['name'])
+
+        atlas.beforeResize = (Closure[])args['beforeResize']
+        atlas.afterResize = (Closure[])args['afterResize']
+
+        return atlas
     }
 
     def setup() {
@@ -129,8 +130,6 @@ class Packer extends DefaultTask {
                                 -resize(resolution.ratio * 100 + '%')
                                 outputFile()
                             }
-
-
                         }
 
 
@@ -146,15 +145,12 @@ class Packer extends DefaultTask {
                             into atlasesPath(resolution)
                         }
 
-                        afterResize.each {
-                            Hook hook ->
-                                // if applyToAtlases is not set, we apply the hook to all atlases
-                                if (hook.applyToAtlases.contains(atlas.toString()) || hook.applyToAtlases.size() == 0) {
-                                    Task afterResizeHook = hook.task(atlas.toString(), resolution.toString())
+                        atlas.afterResize.each {
+                            Closure hook ->
+                                Task afterResizeHook = hook(atlas.toString(), resolution.toString())
 
-                                    afterResizeHook.mustRunAfter resizeImagesTask
-                                    createPacks.dependsOn afterResizeHook
-                                }
+                                afterResizeHook.mustRunAfter resizeImagesTask
+                                createPacks.dependsOn afterResizeHook
                         }
 
                         dependsOn "${name}CreatePacks${resolution}${atlas}"

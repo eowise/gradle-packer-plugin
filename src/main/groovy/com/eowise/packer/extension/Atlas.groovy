@@ -8,6 +8,8 @@ class Atlas {
 
     PatternSet textures
     PatternSet svgs
+    Closure[] beforeResize
+    Closure[] afterResize
 
     Atlas() {
         this.textures = new PatternSet() {  }
