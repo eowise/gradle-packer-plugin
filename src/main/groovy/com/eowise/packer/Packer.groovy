@@ -3,6 +3,7 @@ import com.eowise.imagemagick.tasks.Magick
 import com.eowise.packer.extension.Atlas
 import com.eowise.packer.extension.Atlases
 import com.eowise.packer.extension.NamedAtlas
+import com.eowise.packer.extension.NamedResolution
 import com.eowise.packer.extension.Resolution
 import com.eowise.packer.extension.Resolutions
 import org.gradle.api.DefaultTask
@@ -80,6 +81,15 @@ class Packer extends DefaultTask {
         atlas.afterResize = (Closure[])args['afterResize']
 
         return atlas
+    }
+
+    def resolution(Map<String, ?> args) {
+        def resolution = new NamedResolution((String)args['name'])
+
+        if (args.containsKey('ratio'))
+            resolution.ratio = Float.parseFloat((String)args['ratio'])
+
+        return resolution
     }
 
     def setup() {
