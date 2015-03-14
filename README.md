@@ -14,7 +14,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.eowise:packer:0.6.1'
+    classpath 'com.eowise:packer:0.7.0'
   }
 }
 
@@ -52,6 +52,9 @@ task packs(type: com.eowise.packer.Packer) {
     add 'ldpi', 0.375
   }
 }
+
+All imput iamges will be resized according given ratio.
+
 ```
 ### Atlases
 
@@ -62,9 +65,9 @@ task packs(type: com.eowise.packer.Packer) {
   atlasesOutputPath 'path/to/packs'
 
   atlases {
-    add 'MainMenu'
-    add 'Game'
-    add 'Options'
+    add atlas(name: 'MainMenu')
+    add atlas(name: 'Game')
+    add atlas(name: 'Options')
   }
 }
 ```
@@ -74,6 +77,5 @@ task packs(type: com.eowise.packer.Packer) {
 2. (Before resize hook).
 3. Resize all PNGs in resources paths using the ratio specified for each resolution.
 4. (After resize hook).
-5. Apply 1 pixel 9-patches to all PNG ending with '.9.png'.
-6. Copy 'resolutionName.json' from the resources path to the working directory, and rename it to 'pack.json'.
-7. Call the libgdx texture packer to packs the textures into the output directory (generally android assets directory).
+5. Copy 'resolutionName.json' from the resources path to the working directory, and rename it to 'pack.json'.
+6. Call the libgdx texture packer to packs the textures into the output directory (generally android assets directory).
