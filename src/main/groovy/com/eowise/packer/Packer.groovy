@@ -111,17 +111,6 @@ class Packer extends DefaultTask {
 
                         dependsOn.each { d -> resizeImagesTask.mustRunAfter d }
 
-                        /*
-                        beforeResize.each {
-                            Hook hook ->
-                                // if applyToAtlases is not set, we apply the hook to all atlases
-                                if (hook.applyToAtlases.contains(atlas.toString()) || hook.applyToAtlases.size() == 0) {
-
-                                    project.configure(resizeImagesTask, hook.task)
-                                }
-                        }
-                        */
-
                         project.configure(resizeImagesTask) {
                             convert resourcesPath(atlas), atlas.textures
                             into "out/resources/${resolution}/${atlas}"
@@ -132,7 +121,6 @@ class Packer extends DefaultTask {
                             }
                         }
 
-
                         project.tasks.create(name: "${name}CopyPacks${resolution}${atlas}", type: Copy) {
                             from resourcesPath(atlas)
                             into "out/resources/${resolution}/${atlas}"
@@ -140,9 +128,16 @@ class Packer extends DefaultTask {
                             rename { f -> 'pack.json' }
                         }
 
-                        def createPacks = project.tasks.create(name: "${name}CreatePacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["${name}ResizeImages${resolution}${atlas}", "${name}CopyPacks${resolution}${atlas}"]) {
+                        Task createPacks = project.tasks.create(name: "${name}CreatePacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["${name}ResizeImages${resolution}${atlas}", "${name}CopyPacks${resolution}${atlas}"]) {
                             from atlas.toString(), "out/resources/${resolution}"
                             into atlasesPath(resolution)
+                        }
+
+                        atlas.beforeResize.each {
+                            Closure hook ->
+                                Task beforeResizeHook = hook(atlas.toString(), resolution.toString())
+
+                                resizeImagesTask.dependsOn beforeResizeHook
                         }
 
                         atlas.afterResize.each {
