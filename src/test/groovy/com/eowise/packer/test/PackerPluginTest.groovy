@@ -1,7 +1,6 @@
 package com.eowise.packer.test
 import com.eowise.packer.Packer
 import org.gradle.api.Project
-import org.gradle.api.tasks.util.PatternSet
 import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
 
@@ -78,10 +77,10 @@ class PackerPluginTest extends Specification {
             atlasesOutputPath { resolution -> "out/atlases/${resolution}" }
             
             atlases {
-                add  atlasName
+                add atlas(name: atlasName)
             }
             resolutions {
-                add resolutionName
+                add resolution(name: resolutionName)
             }
         }
 
@@ -95,46 +94,28 @@ class PackerPluginTest extends Specification {
         String atlasName = 'Atlas1'
         String resolutionName = 'base'
         Packer packer = project.task(type: Packer, 'packerAfterResize') as Packer
+        Closure afterResizeClosure = { a, r -> project.task("afterResize${a}${r}")}
 
         when:
         project.configure(packer) {
             resourcesInputPath 'resources'
             atlasesOutputPath 'out/atlases'
 
-            afterResize {
-                configure {
-                    actions {
-                        condition (
-                                textures
-                                        {
-                                            include 'TopPaper.png'
-                                        }
-                                ,
-                                {
-                                    -matte
-                                    -color('none')
-                                    -width(1)
-                                    xc('black')
-                                    -gravity('North')
-                                    -geometry('1x1+0x+0')
-                                    -composite
-                                    xc('black')
-                                    -gravity('West')
-                                    -geometry('1x1+0x+0')
-                                    -composite
-                                }
-                        )
-                    }
-                }
+            atlases {
+                add atlas(name: atlasName, afterResize: afterResizeClosure )
+            }
+
+            resolutions {
+                add resolutionName
             }
         }
 
         packer.setup()
 
         then:
-        dependenciesCreated('packerAfterResize')
-        packer.afterResize.size() == 1
-        project.ext.has("textures")
+        dependenciesCreated('packerAfterResize', atlasName, resolutionName)
+        assert project.tasks.getByName("afterResizeAtlas1base") != null
+
     }
 
 
