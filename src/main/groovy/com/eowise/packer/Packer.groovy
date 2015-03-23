@@ -131,14 +131,20 @@ class Packer extends DefaultTask {
                             }
                         }
 
-                        project.tasks.create(name: "${name}CopyPacks${resolution}${atlas}", type: Copy) {
+                        project.tasks.create(name: "${name}CopyGenericPacks${resolution}${atlas}", type: Copy) {
                             from resourcesPath(atlas)
                             into "out/resources/${resolution}/${atlas}"
-                            include "${resolution}.json"
+                            include '**/pack.json'
+                        }
+
+                        project.tasks.create(name: "${name}CopyResolutionSpecificPacks${resolution}${atlas}", type: Copy, dependsOn: "${name}CopyGenericPacks${resolution}${atlas}") {
+                            from resourcesPath(atlas)
+                            into "out/resources/${resolution}/${atlas}"
+                            include "**/${resolution}.json"
                             rename { f -> 'pack.json' }
                         }
 
-                        Task createPacks = project.tasks.create(name: "${name}CreatePacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["${name}ResizeImages${resolution}${atlas}", "${name}CopyPacks${resolution}${atlas}"]) {
+                        Task createPacks = project.tasks.create(name: "${name}CreatePacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["${name}ResizeImages${resolution}${atlas}", "${name}CopyResolutionSpecificPacks${resolution}${atlas}"]) {
                             from atlas.toString(), "out/resources/${resolution}"
                             into atlasesPath(resolution)
                         }
