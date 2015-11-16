@@ -23,7 +23,7 @@ publishing {
         MyPublication(MavenPublication) {
             from components.java
             groupId 'com.eowise'
-            artifactId 'gradle-packer-plugin'
+            artifactId 'packer'
             version '0.7.0'
         }
     }
@@ -35,7 +35,7 @@ bintray {
     publications = ['MyPublication']
     pkg {
         repo = 'maven'
-        name = 'gradle-packer-plugin'
+        name = 'packer'
         licenses = ['MIT']
         vcsUrl = 'https://github.com/eowise/gradle-packer-plugin.git'
         version {
