@@ -46,10 +46,10 @@ task packs(type: com.eowise.packer.Packer) {
   atlasesOutputPath 'path/to/packs'
 
   resolutions {
-    add 'xhdpi'
-    add 'hdpi', 0.75
-    add 'mdpi', 0.5   
-    add 'ldpi', 0.375
+    add resolution(name: 'xhdpi')
+    add resolution(name: 'hdpi', ratio: 0.75)
+    add resolution(name: 'mdpi', ratio: 0.5)
+    add resolution(name: 'ldpi', ratio: 0.375)
   }
 }
 
