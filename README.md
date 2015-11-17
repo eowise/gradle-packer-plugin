@@ -10,7 +10,7 @@ A Gradle plugin witch automatically packs texture for a libgdx game, using libgd
 ```groovy
 buildscript {
   repositories {
-    mavenCentral()
+    jCenter()
   }
 
   dependencies {
