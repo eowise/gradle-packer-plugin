@@ -122,7 +122,8 @@ class PackerPluginTest extends Specification {
     void dependenciesCreated(String taskName, String atlasName = '', String resolutionName = '') {
         assert project.tasks.getByName("${taskName}ConvertSvg${atlasName}") != null
         assert project.tasks.getByName("${taskName}ResizeImages${resolutionName}${atlasName}") != null
-        assert project.tasks.getByName("${taskName}CopyPacks${resolutionName}${atlasName}") != null
+        assert project.tasks.getByName("${taskName}CopyGenericPacks${resolutionName}${atlasName}") != null
+        assert project.tasks.getByName("${taskName}CopyResolutionSpecificPacks${resolutionName}${atlasName}") != null
         assert project.tasks.getByName("${taskName}CreatePacks${resolutionName}${atlasName}") != null
     }
 }
