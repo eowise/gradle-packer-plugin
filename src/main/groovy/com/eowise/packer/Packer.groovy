@@ -107,6 +107,7 @@ class Packer extends DefaultTask {
                     convert resourcesPath(atlas), atlas.svgs
                     into resourcesPath(atlas)
                     actions {
+                        -background('none')
                         inputFile()
                         outputFile { fileName, extension -> "${fileName}.png" }
                     }

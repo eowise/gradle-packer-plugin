@@ -14,7 +14,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.eowise:packer:0.7.0'
+    classpath 'com.eowise:packer:0.7.1'
   }
 }
 
