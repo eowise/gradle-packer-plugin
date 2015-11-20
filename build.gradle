@@ -35,7 +35,7 @@ bintray {
     publications = ['MyPublication']
     pkg {
         repo = 'maven'
-        name = 'packer'
+        name = 'gradle-packer-plugin'
         licenses = ['MIT']
         vcsUrl = 'https://github.com/eowise/gradle-packer-plugin.git'
         version {
