@@ -99,11 +99,13 @@ class Packer extends DefaultTask {
         
         if (resolutions.size() == 0)
             resolutions.add(uniqueResolution)
+
+        String taskName = name
         
         atlases.each() {
             atlas ->
 
-                Task convertSvg = project.tasks.create(name: "${name}ConvertSvg${atlas}", type: Magick) {
+                Task convertSvg = project.tasks.create(name: "${taskName}ConvertSvg${atlas}", type: Magick) {
                     convert resourcesPath(atlas), atlas.svgs
                     into resourcesPath(atlas)
                     actions {
@@ -118,13 +120,13 @@ class Packer extends DefaultTask {
                 resolutions.each() {
                     resolution ->
 
-                        Task resizeImagesTask = project.tasks.create(name: "${name}ResizeImages${resolution}${atlas}", type: Magick, dependsOn: "${name}ConvertSvg${atlas}")
+                        Task resizeImagesTask = project.tasks.create(name: "${taskName}ResizeImages${resolution}${atlas}", type: Magick, dependsOn: "${taskName}ConvertSvg${atlas}")
 
                         dependsOn.each { d -> resizeImagesTask.mustRunAfter d }
 
                         project.configure(resizeImagesTask) {
                             convert resourcesPath(atlas), atlas.textures
-                            into "out/resources/${resolution}/${atlas}"
+                            into "out/resources/${taskName}/${resolution}/${atlas}"
                             actions {
                                 inputFile()
                                 -resize(resolution.ratio * 100 + '%')
@@ -132,21 +134,21 @@ class Packer extends DefaultTask {
                             }
                         }
 
-                        project.tasks.create(name: "${name}CopyGenericPacks${resolution}${atlas}", type: Copy) {
+                        project.tasks.create(name: "${taskName}CopyGenericPacks${resolution}${atlas}", type: Copy) {
                             from resourcesPath(atlas)
-                            into "out/resources/${resolution}/${atlas}"
+                            into "out/resources/${taskName}/${resolution}/${atlas}"
                             include '**/pack.json'
                         }
 
-                        project.tasks.create(name: "${name}CopyResolutionSpecificPacks${resolution}${atlas}", type: Copy, dependsOn: "${name}CopyGenericPacks${resolution}${atlas}") {
+                        project.tasks.create(name: "${taskName}CopyResolutionSpecificPacks${resolution}${atlas}", type: Copy, dependsOn: "${taskName}CopyGenericPacks${resolution}${atlas}") {
                             from resourcesPath(atlas)
-                            into "out/resources/${resolution}/${atlas}"
+                            into "out/resources/${taskName}/${resolution}/${atlas}"
                             include "**/${resolution}.json"
                             rename { f -> 'pack.json' }
                         }
 
-                        Task createPacks = project.tasks.create(name: "${name}CreatePacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["${name}ResizeImages${resolution}${atlas}", "${name}CopyResolutionSpecificPacks${resolution}${atlas}"]) {
-                            from atlas.toString(), "out/resources/${resolution}"
+                        Task createPacks = project.tasks.create(name: "${taskName}CreatePacks${resolution}${atlas}", type: TexturePacker, dependsOn: ["${taskName}ResizeImages${resolution}${atlas}", "${taskName}CopyResolutionSpecificPacks${resolution}${atlas}"]) {
+                            from atlas.toString(), "out/resources/${taskName}/${resolution}"
                             into atlasesPath(resolution)
                         }
 
@@ -165,7 +167,7 @@ class Packer extends DefaultTask {
                                 createPacks.dependsOn afterResizeHook
                         }
 
-                        dependsOn "${name}CreatePacks${resolution}${atlas}"
+                        dependsOn "${taskName}CreatePacks${resolution}${atlas}"
                         //project.cleanPacks.dependsOn "cleanCreatePacks${resolution}${atlas}"
                         //project.cleanPacks.dependsOn "cleanResizeImages${resolution}${atlas}"
                 }
