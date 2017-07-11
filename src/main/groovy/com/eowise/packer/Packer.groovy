@@ -111,6 +111,9 @@ class Packer extends DefaultTask {
                     actions {
                         -background('none')
                         inputFile()
+                        // Full-color RGB with alpha, to work around
+                        // https://github.com/libgdx/libgdx/issues/4814
+                        -define('png:color-type=6')
                         outputFile { fileName, extension -> "${fileName}.png" }
                     }
                 }
@@ -130,6 +133,9 @@ class Packer extends DefaultTask {
                             actions {
                                 inputFile()
                                 -resize(resolution.ratio * 100 + '%')
+                                // Full-color RGB with alpha, to work around
+                                // https://github.com/libgdx/libgdx/issues/4814
+                                -define('png:color-type=6')
                                 outputFile()
                             }
                         }
