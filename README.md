@@ -14,7 +14,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.eowise:packer:0.7.2'
+    classpath 'com.eowise:packer:0.7.3'
   }
 }
 
@@ -52,10 +52,9 @@ task packs(type: com.eowise.packer.Packer) {
     add resolution(name: 'ldpi', ratio: 0.375)
   }
 }
-
+```
 All imput iamges will be resized according given ratio.
 
-```
 ### Atlases
 
 You can also pack several atlases :
